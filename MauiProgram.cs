@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using MenuOrderMAUI.Data;
+using Microsoft.Extensions.Logging;
+
 
 namespace MenuOrderMAUI
 {
@@ -15,7 +18,7 @@ namespace MenuOrderMAUI
                 });
 
             builder.Services.AddMauiBlazorWebView();
-
+            builder.Services.AddSingleton<DatabaseService>();
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
