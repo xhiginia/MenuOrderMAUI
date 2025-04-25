@@ -1,0 +1,121 @@
+﻿@page "/orders"
+@using MenuOrderMAUI.Models
+@using MySqlConnector
+@using MenuOrderMAUI.Data
+@inject DatabaseService DatabaseService
+
+
+<div class="container">
+    <h2>Orders</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Order Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Orders != null && Orders.Any())
+            {
+                @foreach (var order in Orders)
+                {
+                    <tr>
+                        <td>@order.OrderID</td>
+                        <td>@order.ItemName</td>
+                        <td>@order.Quantity</td>
+                        <td>@order.OrderDate.ToString("MM/dd/yyyy")</td> <!-- Format date -->
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" style="text-align: center;">No Orders Found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <h3>Place New Order</h3>
+    <div class="form-container">
+        <select @bind="SelectedItemID">
+            <option value="">--Select Item--</option>
+            @foreach (var item in MenuItems)
+            {
+                <option value="@item.ItemID">@item.ItemName</option>
+            }
+        </select>
+
+        <input type="number" @bind="Quantity" min="1" placeholder="Enter Quantity" />
+        <button @onclick="PlaceOrder">Place Order</button>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error-message">@ErrorMessage</p>
+        }
+    </div>
+</div>
+@code {
+    private List<Orders> Orders = new();
+    private List<MenuItems> MenuItems = new();
+    private int SelectedItemID;
+    private int Quantity;
+    private string ErrorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+        await LoadMenuItems();
+    }
+
+    private async Task LoadOrders()
+    {
+        try
+        {
+            Orders = await DatabaseService.GetOrdersAsync();
+            ErrorMessage = ""; // Clear errors after successful load
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading orders: {ex.Message}";
+        }
+    }
+
+    private async Task LoadMenuItems()
+    {
+        try
+        {
+            MenuItems = await DatabaseService.GetMenuItemsAsync();
+            ErrorMessage = ""; // Clear errors after successful load
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading menu items: {ex.Message}";
+        }
+    }
+
+    private async Task PlaceOrder()
+    {
+        if (SelectedItemID > 0 && Quantity > 0)
+        {
+            try
+            {
+                await DatabaseService.PlaceOrderAsync(SelectedItemID, Quantity);
+                await LoadOrders();
+                SelectedItemID = 0; // Reset form inputs
+                Quantity = 0;
+                ErrorMessage = ""; // Clear errors after successful order
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error placing order: {ex.Message}";
+            }
+        }
+        else
+        {
+            ErrorMessage = "Please select an item and enter a valid quantity.";
+        }
+    }
+}

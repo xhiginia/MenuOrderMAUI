@@ -9,7 +9,7 @@ namespace MenuOrderMAUI.Models
     public class Payments
     {
         public int PaymentID { get; set; }
-        public int OrderId { get; set; }
+        public int OrderID { get; set; }
         public string PaymentMethod { get; set; }
         public decimal PaymentAmount { get; set; }
         public decimal TotalBill {  get; set; }

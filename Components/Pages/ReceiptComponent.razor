@@ -1,0 +1,98 @@
+﻿@page "/receipts"
+@using MenuOrderMAUI.Models
+@using MenuOrderMAUI.Data
+@using MySqlConnector
+@inject DatabaseService DatabaseService
+
+
+<div class="container">
+    <h2>Receipts</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Receipt ID</th>
+                <th>Order ID</th>
+                <th>Total Bill</th>
+                <th>Generated Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Receipts != null && Receipts.Any())
+            {
+                @foreach (var receipt in Receipts)
+                {
+                    <tr>
+                        <td>@receipt.ReceiptID</td>
+                        <td>@receipt.OrderID</td>
+                        <td>@receipt.TotalBill.ToString("C")</td> <!-- Currency format -->
+                        <td>@receipt.GenerateDate.ToString("MM/dd/yyyy")</td> <!-- Date formatting -->
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" style="text-align: center;">No Receipts Found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3>Generate Receipt</h3>
+    <div class="form-container">
+        <input type="number" @bind="OrderID" min="1" placeholder="Enter Order ID" />
+        <button @onclick="GenerateReceipt">Generate Receipt</button>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error-message">@ErrorMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Receipts> Receipts = new();
+    private int OrderID;
+    private string ErrorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReceipts();
+    }
+
+    private async Task LoadReceipts()
+    {
+        try
+        {
+            Receipts = await DatabaseService.GetReceiptsAsync();
+            ErrorMessage = ""; // Clear errors on success
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading receipts: {ex.Message}";
+        }
+    }
+
+    private async Task GenerateReceipt()
+    {
+        if (OrderID > 0)
+        {
+            try
+            {
+                await DatabaseService.GenerateReceiptAsync(OrderID);
+                await LoadReceipts();
+                OrderID = 0; // Reset input
+                ErrorMessage = ""; // Clear error on success
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error generating receipt: {ex.Message}";
+            }
+        }
+        else
+        {
+            ErrorMessage = "Please enter a valid Order ID.";
+        }
+    }
+}

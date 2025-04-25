@@ -1,0 +1,113 @@
+﻿@page "/payments"
+@using MenuOrderMAUI.Models
+@using MenuOrderMAUI.Data
+@inject DatabaseService DatabaseService
+
+
+<div class="container">
+    <h2>Payments</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Payment ID</th>
+                <th>Order ID</th>
+                <th>Payment Method</th>
+                <th>Payment Amount</th>
+                <th>Change Amount</th>
+                <th>Total Bill</th>
+                <th>Payment Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Payments != null && Payments.Any())
+            {
+                @foreach (var payment in Payments)
+                {
+                    <tr>
+                        <td>@payment.PaymentID</td>
+                        <td>@payment.OrderID</td>
+                        <td>@payment.PaymentMethod</td>
+                        <td>@payment.PaymentAmount.ToString("C")</td>
+                        <td>@payment.TotalBill.ToString("C")</td>
+                        <td><strong>@payment.ChangeAmount.ToString("C")</strong></td>
+                        <td>@payment.PaymentDate.ToString("MM/dd/yyyy")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="7" style="text-align: center;">No Payments Found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3>Add Payment</h3>
+    <div class="form-container">
+        <input type="number" @bind="OrderID" placeholder="Enter Order ID" />
+        <select @bind="PaymentMethod">
+            <option value="">--Select Method--</option>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+        </select>
+        <input type="number" @bind="PaymentAmount" min="0" placeholder="Enter Payment Amount" />
+        <button @onclick="AddPayment">Add Payment</button>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error-message">@ErrorMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Payments> Payments = new();
+    private int OrderID;
+    private string PaymentMethod = "";
+    private decimal PaymentAmount;
+    private string ErrorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPayments();
+    }
+
+    private async Task LoadPayments()
+    {
+        try
+        {
+            Payments = await DatabaseService.GetPaymentsAsync();
+            ErrorMessage = "";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading payments: {ex.Message}";
+        }
+    }
+
+    private async Task AddPayment()
+    {
+        if (OrderID > 0 && !string.IsNullOrEmpty(PaymentMethod) && PaymentAmount > 0)
+        {
+            try
+            {
+                await DatabaseService.AddPaymentAsync(OrderID, PaymentMethod, PaymentAmount);
+                await LoadPayments();
+                OrderID = 0;
+                PaymentMethod = "";
+                PaymentAmount = 0;
+                Console.WriteLine("Payment added successfully!");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Error adding payment: {ex.Message}";
+            }
+        }
+        else
+        {
+            ErrorMessage = "Please fill in all fields with valid data.";
+        }
+    }
+}
