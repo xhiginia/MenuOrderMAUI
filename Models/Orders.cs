@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace MenuOrderMAUI.Models
 {
-    internal class Orders
+    public class Orders
     {
+        public int OrderID { get; set; }
+        public int ItemID { get; set; }
+        public required string ItemName { get; set; }
+        public int Quantity { get; set; }
+        public DateTime OrderDate { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace MenuOrderMAUI.Models
 {
     public class MenuItems
     {
-        public int ItemId { get; set; }
+        public int ItemID { get; set; }
         public string ItemName { get; set; }
         public decimal Price { get; set; }
     }

@@ -1,0 +1,99 @@
+﻿@page "/"
+@using MenuOrderMAUI.Models
+@using MenuOrderMAUI.Data
+@using MySqlConnector
+@inject DatabaseService DatabaseService
+
+<div class="container">
+    <h2>Welcome to Jolli Mcdo</h2>
+    <h4>Your Craving! Our Serving!</h4>
+
+    @if (MenuItems == null)
+    {
+        <p>Loading..</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Item ID</th>
+                    <th>Item Name</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var menuItem in MenuItems)
+                {
+                    <tr>
+                        <td>@menuItem.ItemID</td>
+                        <td>@menuItem.ItemName</td>
+                        <td>@menuItem.Price.ToString("C")</td> <!-- Currency format for price -->
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <h3>Add New Menu Item</h3>
+    <div class="form-container">
+        <form>
+            <input type="text" placeholder="Enter Item Name" @bind="NewItemName" />
+            <input type="number" step="0.01" placeholder="Enter Price" @bind="NewPrice" />
+            <button type="button" @onclick="AddMenuItem">Add New Menu</button>
+        </form>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error-message">@ErrorMessage</p>
+        }
+    </div>
+</div>
+
+@code{
+    private List<MenuItems> MenuItems = new();
+    private string NewItemName;
+    private decimal NewPrice;
+    private string ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuItems();
+    }
+
+    private async Task LoadMenuItems()
+    {
+        try
+        {
+            MenuItems = await DatabaseService.GetMenuItemsAsync();
+            ErrorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Failed to load menu items. Please try again later.";
+            Console.WriteLine($"Error loading menu items: {ex.Message}");
+        }
+    }
+    private async Task AddMenuItem()
+    {
+        if (!string.IsNullOrEmpty(NewItemName) && NewPrice > 0)
+        {
+            try
+            {
+                await DatabaseService.AddMenuItemAsync(NewItemName, NewPrice);
+                await LoadMenuItems();
+                NewItemName = string.Empty;
+                NewPrice = 0;
+                ErrorMessage = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = "Failed to add menu item. Please try again.";
+                Console.WriteLine($"Error adding menu item: {ex.Message}");
+            }
+        }
+        else
+        {
+            ErrorMessage = "Item name and price are required!";
+        }
+    }
+}
