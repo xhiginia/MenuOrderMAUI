@@ -160,7 +160,7 @@
     private int SelectedItemID;
     private int Quantity;
     private string ErrorMessage = "";
-
+    private string OrderSuccessMessage;
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders();
@@ -201,17 +201,19 @@
             {
                 await DatabaseService.PlaceOrderAsync(SelectedItemID, Quantity);
                 await LoadOrders();
-                SelectedItemID = 0; // Reset form inputs
+                OrderSuccessMessage = $"Order for Item ID {SelectedItemID} has been placed successfully!";
+                SelectedItemID = 0;
                 Quantity = 0;
-                ErrorMessage = ""; // Clear errors after successful order
             }
             catch (Exception ex)
             {
+                OrderSuccessMessage = string.Empty; // Clear success message on failure
                 ErrorMessage = $"Error placing order: {ex.Message}";
             }
         }
         else
         {
+            OrderSuccessMessage = string.Empty; // Clear success message for invalid inputs
             ErrorMessage = "Please select an item and enter a valid quantity.";
         }
     }

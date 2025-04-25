@@ -8,100 +8,100 @@
 <style>
     /* General Styling */
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f9fafb; /* Light gray for a professional look */
-        margin: 0;
-        padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9fafb; /* Light gray for a professional look */
+    margin: 0;
+    padding: 0;
     }
 
     .container {
-        max-width: 1200px;
-        margin: auto;
-        padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
     }
 
     h2 {
-        text-align: center;
-        color: #007bff; /* Blue for primary heading */
-        margin-top: 20px;
-        font-size: 32px;
+    text-align: center;
+    color: #007bff; /* Blue for primary heading */
+    margin-top: 20px;
+    font-size: 32px;
     }
 
     h3 {
-        color: #28a745; /* Green for subheading */
-        margin-top: 30px;
+    color: #28a745; /* Green for subheading */
+    margin-top: 30px;
     }
 
     /* Table Styling */
     table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        background-color: #ffffff;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-        table thead {
-            background-color: #007bff;
-            color: #ffffff;
-        }
+    table thead {
+    background-color: #007bff;
+    color: #ffffff;
+    }
 
-        table th, table td {
-            padding: 12px;
-            text-align: left;
-        }
+    table th, table td {
+    padding: 12px;
+    text-align: left;
+    }
 
-        table tbody tr:nth-child(even) {
-            background-color: #f8f9fa; /* Alternating row colors */
-        }
+    table tbody tr:nth-child(even) {
+    background-color: #f8f9fa; /* Alternating row colors */
+    }
 
-        table tbody tr:hover {
-            background-color: #e2e6ea; /* Subtle hover effect */
-            cursor: pointer;
-        }
+    table tbody tr:hover {
+    background-color: #e2e6ea; /* Subtle hover effect */
+    cursor: pointer;
+    }
 
     /* Form Styling */
     .form-container {
-        margin-top: 30px;
-        padding: 20px;
-        background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     input, button {
-        display: block;
-        width: 100%;
-        margin-top: 10px;
-        padding: 10px;
-        font-size: 16px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
     }
 
     input {
-        background-color: #f8f9fa;
+    background-color: #f8f9fa;
     }
 
     button {
-        background-color: #28a745;
-        color: #ffffff;
-        font-weight: bold;
-        border: none;
-        cursor: pointer;
+    background-color: #28a745;
+    color: #ffffff;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
     }
 
-        button:hover {
-            background-color: #218838;
-        }
+    button:hover {
+    background-color: #218838;
+    }
 
     /* Error Message Styling */
     .error-message {
-        color: #d9534f;
-        margin-top: 10px;
-        font-size: 14px;
+    color: #d9534f;
+    margin-top: 10px;
+    font-size: 14px;
     }
 </style>
 
@@ -155,6 +155,8 @@
     private List<Receipts> Receipts = new();
     private int OrderID;
     private string ErrorMessage = "";
+    private string ReceiptSuccessMessage;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -182,16 +184,18 @@
             {
                 await DatabaseService.GenerateReceiptAsync(OrderID);
                 await LoadReceipts();
+                ReceiptSuccessMessage = $"Receipt for Order ID {OrderID} has been generated successfully!";
                 OrderID = 0; // Reset input
-                ErrorMessage = ""; // Clear error on success
             }
             catch (Exception ex)
             {
+                ReceiptSuccessMessage = string.Empty; // Clear success message on failure
                 ErrorMessage = $"Error generating receipt: {ex.Message}";
             }
         }
         else
         {
+            ReceiptSuccessMessage = string.Empty; // Clear success message for invalid inputs
             ErrorMessage = "Please enter a valid Order ID.";
         }
     }

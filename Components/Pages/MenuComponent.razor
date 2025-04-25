@@ -151,6 +151,11 @@
             <button type="button" @onclick="AddMenuItem">Add New Menu</button>
         </form>
 
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <p style="color: green;">@SuccessMessage</p>
+        }
+
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
             <p class="error-message">@ErrorMessage</p>
@@ -163,6 +168,7 @@
     private string NewItemName;
     private decimal NewPrice;
     private string ErrorMessage;
+    private string SuccessMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -189,20 +195,24 @@
             try
             {
                 await DatabaseService.AddMenuItemAsync(NewItemName, NewPrice);
-                await LoadMenuItems();
+                await LoadMenuItems(); // Refresh the menu items after adding
+
+                SuccessMessage = $"Menu item '{NewItemName}' was added successfully!";
+                ErrorMessage = string.Empty; // Clear error message if successful
                 NewItemName = string.Empty;
                 NewPrice = 0;
-                ErrorMessage = string.Empty;
             }
-            catch (Exception ex)
+             catch (Exception ex)
             {
+                SuccessMessage = string.Empty; // Clear success message on failure
                 ErrorMessage = "Failed to add menu item. Please try again.";
                 Console.WriteLine($"Error adding menu item: {ex.Message}");
             }
+            }
+            else
+            {
+                SuccessMessage = string.Empty; // Clear success message for invalid inputs
+                ErrorMessage = "Item name and price are required!";
+            }
         }
-        else
-        {
-            ErrorMessage = "Item name and price are required!";
-        }
-    }
 }

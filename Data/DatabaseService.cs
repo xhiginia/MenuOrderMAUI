@@ -232,59 +232,46 @@ namespace MenuOrderMAUI.Data
             }
             return payments;
         }
-        public async Task<string> AddPaymentAsync(int orderID, string paymentMethod, decimal paymentAmount)
+        public async Task AddPaymentAsync(int orderID, string paymentMethod, decimal paymentAmount)
         {
             try
             {
                 using var connection = GetConnection();
                 await connection.OpenAsync();
 
-                // Step 1: Fetch TotalBill for the given OrderID
-                string getTotalBillQuery = "SELECT TotalBill FROM Receipts WHERE OrderID = @OrderID;";
-                decimal totalBill = 0;
+                // Step 1: Check if a payment for this OrderID already exists
+                string checkQuery = "SELECT COUNT(*) FROM Payments WHERE OrderID = @OrderID;";
+                using var checkCommand = new MySqlCommand(checkQuery, connection);
+                checkCommand.Parameters.AddWithValue("@OrderID", orderID);
+                var existingCount = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
 
-                using (var command = new MySqlCommand(getTotalBillQuery, connection))
+                if (existingCount > 0)
                 {
-                    command.Parameters.AddWithValue("@OrderID", orderID);
-                    using var reader = await command.ExecuteReaderAsync();
-                    if (await reader.ReadAsync())
-                    {
-                        totalBill = reader.GetDecimal("TotalBill");
-                    }
-                    else
-                    {
-                        return $"No receipt found for OrderID: {orderID}";
-                    }
+                    throw new InvalidOperationException($"A payment for OrderID: {orderID} already exists.");
                 }
 
-                // Step 2: Validate TotalBill
-                if (totalBill <= 0)
-                {
-                    return $"Invalid TotalBill for OrderID: {orderID}. TotalBill must be greater than zero.";
-                }
-
-                // Step 3: Calculate ChangeAmount
-                decimal changeAmount = paymentAmount - totalBill;
-
-                // Step 4: Insert Payment into Payments table
+                // Step 2: Insert the payment into the Payments table
                 string insertPaymentQuery = @"
-            INSERT INTO Payments (OrderID, PaymentMethod, PaymentAmount, ChangeAmount)
-            VALUES (@OrderID, @PaymentMethod, @PaymentAmount, @ChangeAmount);";
+            INSERT INTO Payments (OrderID, PaymentMethod, PaymentAmount)
+            VALUES (@OrderID, @PaymentMethod, @PaymentAmount);";
 
-                using (var insertCommand = new MySqlCommand(insertPaymentQuery, connection))
-                {
-                    insertCommand.Parameters.AddWithValue("@OrderID", orderID);
-                    insertCommand.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
-                    insertCommand.Parameters.AddWithValue("@PaymentAmount", paymentAmount);
-                    insertCommand.Parameters.AddWithValue("@ChangeAmount", changeAmount);
-                    await insertCommand.ExecuteNonQueryAsync();
-                }
+                using var insertCommand = new MySqlCommand(insertPaymentQuery, connection);
+                insertCommand.Parameters.AddWithValue("@OrderID", orderID);
+                insertCommand.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
+                insertCommand.Parameters.AddWithValue("@PaymentAmount", paymentAmount);
+                await insertCommand.ExecuteNonQueryAsync();
 
-                return $"Payment added successfully! ChangeAmount: {changeAmount}";
+                Console.WriteLine($"Payment added successfully for OrderID: {orderID}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
             }
             catch (Exception ex)
             {
-                return $"Error in AddPaymentAsync: {ex.Message}";
+                Console.WriteLine($"Error in AddPaymentAsync: {ex.Message}");
+                throw;
             }
         }
     }

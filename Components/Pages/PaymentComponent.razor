@@ -193,11 +193,15 @@
             try
             {
                 await DatabaseService.AddPaymentAsync(OrderID, PaymentMethod, PaymentAmount);
-                await LoadPayments();
+                await LoadPayments(); // Refresh payments after successful addition
                 OrderID = 0;
                 PaymentMethod = "";
                 PaymentAmount = 0;
-                Console.WriteLine("Payment added successfully!");
+                ErrorMessage = ""; // Clear error message on success
+            }
+            catch (InvalidOperationException ex)
+            {
+                ErrorMessage = ex.Message; // Show the duplicate payment error
             }
             catch (Exception ex)
             {
