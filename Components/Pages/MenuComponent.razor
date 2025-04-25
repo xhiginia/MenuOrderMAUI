@@ -4,6 +4,115 @@
 @using MySqlConnector
 @inject DatabaseService DatabaseService
 
+<style>
+    /* General Styling */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #fdf0d5; /* Warm and inviting background color */
+    }
+
+    h2 {
+        text-align: center;
+        color: #ff6f61; /* Vibrant color for header */
+        margin-top: 20px;
+        font-size: 36px;
+    }
+
+    h4 {
+        text-align: center;
+        color: #e85d04; /* Accent color for subheader */
+    }
+
+    h3 {
+        color: #e85d04;
+        margin-top: 30px;
+    }
+
+    /* Container Styling */
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    /* Table Styling */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #ffffff; /* Table background */
+        border-radius: 8px; /* Rounded corners */
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+        table thead {
+            background-color: #ff6f61;
+            color: #ffffff; /* White text for headers */
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #fef9ef; /* Subtle alternating row color */
+        }
+
+        table tbody tr:hover {
+            background-color: #ffedd8; /* Hover effect */
+            cursor: pointer;
+        }
+
+    /* Form Styling */
+    .form-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    input, button {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    input {
+        background-color: #fef9ef;
+    }
+
+    button {
+        background-color: #ff6f61;
+        color: #ffffff;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #e85d04;
+        }
+
+    /* Error Message */
+    .error-message {
+        color: #d90429; /* Bright red for errors */
+        font-size: 14px;
+        margin-top: 10px;
+    }
+</style>
+
 <div class="container">
     <h2>Welcome to Jolli Mcdo</h2>
     <h4>Your Craving! Our Serving!</h4>

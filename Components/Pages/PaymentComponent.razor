@@ -3,6 +3,105 @@
 @using MenuOrderMAUI.Data
 @inject DatabaseService DatabaseService
 
+<style>
+    /* General Styling */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        color: #007bff; /* Primary blue for headers */
+        margin-top: 20px;
+        font-size: 32px;
+    }
+
+    h3 {
+        color: #28a745; /* Green for forms */
+        margin-top: 30px;
+    }
+
+    /* Table Styling */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+        table thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background-color: #e9ecef;
+            cursor: pointer;
+        }
+
+    /* Form Styling */
+    .form-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    input, select, button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    input, select {
+        background-color: #f8f9fa;
+    }
+
+    button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+    /* Error Message Styling */
+    .error-message {
+        color: #d9534f; /* Red for errors */
+        margin-top: 10px;
+        font-size: 14px;
+    }
+</style>
 
 <div class="container">
     <h2>Payments</h2>

@@ -4,6 +4,103 @@
 @using MenuOrderMAUI.Data
 @inject DatabaseService DatabaseService
 
+<style>
+    /* General Styling */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9; /* Neutral background color */
+    }
+
+    h2 {
+        text-align: center;
+        color: #0077c8; /* Eye-catching blue for header */
+        margin-top: 20px;
+        font-size: 36px;
+    }
+
+    h3 {
+        color: #28a745; /* Green for forms */
+        margin-top: 30px;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    /* Table Styling */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+        table thead {
+            background-color: #0077c8;
+            color: #ffffff; /* White text for headers */
+        }
+
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternating row colors */
+        }
+
+        table tbody tr:hover {
+            background-color: #e3f2fd; /* Subtle hover effect */
+            cursor: pointer;
+        }
+
+    /* Form Styling */
+    .form-container {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    select, input, button {
+        display: block;
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+    input, select {
+        background-color: #f8f9fa;
+    }
+
+    button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+
+        button:hover {
+            background-color: #0056a3;
+        }
+
+    .error-message {
+        color: #d32f2f; /* Bright red for errors */
+        font-size: 14px;
+        margin-top: 10px;
+    }
+</style>
 
 <div class="container">
     <h2>Orders</h2>
