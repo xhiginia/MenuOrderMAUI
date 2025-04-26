@@ -61,6 +61,7 @@ namespace MenuOrderMAUI.Data
                 Console.WriteLine($"Error adding menu item: {ex.Message}");
             }
         }
+
         public async Task<List<Orders>> GetOrdersAsync()
         {
             var orders = new List<Orders>();
@@ -154,48 +155,54 @@ namespace MenuOrderMAUI.Data
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task GenerateReceiptAsync(int orderId)
+        public async Task GenerateReceiptAsync(int orderID)
         {
             try
             {
                 using var connection = GetConnection();
                 await connection.OpenAsync();
 
-                // Step 1: Calculate Total Bill for the Order
-                string calculateTotalQuery = @"
-                     SELECT SUM(o.Quantity * m.Price) AS TotalBill
-                     FROM Orders o
-                     JOIN MenuItems m ON o.ItemID = m.ItemID
-                     WHERE o.OrderID = @OrderID;";
+                // Step 1: Fetch the maximum OrderID from the Orders table
+                string maxOrderQuery = "SELECT MAX(OrderID) FROM Orders;";
+                using var maxOrderCommand = new MySqlCommand(maxOrderQuery, connection);
+                var maxOrderID = Convert.ToInt32(await maxOrderCommand.ExecuteScalarAsync());
 
-                decimal totalBill = 0;
-                using var calculateCommand = new MySqlCommand(calculateTotalQuery, connection);
-                calculateCommand.Parameters.AddWithValue("@OrderID", orderId);
-
-                using var calculateReader = await calculateCommand.ExecuteReaderAsync();
-                if (await calculateReader.ReadAsync() && !DBNull.Value.Equals(calculateReader["TotalBill"]))
+                // Step 2: Validate the provided OrderID
+                if (orderID > maxOrderID)
                 {
-                    totalBill = calculateReader.GetDecimal("TotalBill");
+                    throw new InvalidOperationException($"Cannot generate receipt. OrderID {orderID} is not save in database yet.");
                 }
-                calculateReader.Close();
 
-                if (totalBill > 0)
+                // Step 3: Check if the OrderID exists in the Orders table
+                string checkOrderQuery = "SELECT COUNT(*) FROM Orders WHERE OrderID = @OrderID;";
+                using var checkOrderCommand = new MySqlCommand(checkOrderQuery, connection);
+                checkOrderCommand.Parameters.AddWithValue("@OrderID", orderID);
+                var orderExists = Convert.ToInt32(await checkOrderCommand.ExecuteScalarAsync());
+
+                if (orderExists == 0)
                 {
-                    // Step 2: Insert the Receipt into the Receipts Table
-                    string insertReceiptQuery = @"
-                INSERT INTO Receipts (OrderID, TotalBill)
-                VALUES (@OrderID, @TotalBill);";
-
-                    using var insertCommand = new MySqlCommand(insertReceiptQuery, connection);
-                    insertCommand.Parameters.AddWithValue("@OrderID", orderId);
-                    insertCommand.Parameters.AddWithValue("@TotalBill", totalBill);
-
-                    await insertCommand.ExecuteNonQueryAsync();
+                    throw new InvalidOperationException($"OrderID {orderID} does not exist.");
                 }
-                else
-                {
-                    Console.WriteLine("Order not found or no items in the order.");
-                }
+
+                // Step 4: Insert receipt into the Receipts table
+                string insertReceiptQuery = @"
+            INSERT INTO Receipts (OrderID, TotalBill, GenerateDate)
+            SELECT OrderID, SUM(Quantity * Price), NOW()
+            FROM Orders
+            JOIN MenuItems ON Orders.ItemID = MenuItems.ItemID
+            WHERE Orders.OrderID = @OrderID
+            GROUP BY Orders.OrderID;";
+
+                using var insertReceiptCommand = new MySqlCommand(insertReceiptQuery, connection);
+                insertReceiptCommand.Parameters.AddWithValue("@OrderID", orderID);
+                await insertReceiptCommand.ExecuteNonQueryAsync();
+
+                Console.WriteLine($"Receipt generated successfully for OrderID {orderID}.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Validation Error: {ex.Message}");
+                throw;
             }
             catch (Exception ex)
             {
@@ -225,9 +232,9 @@ namespace MenuOrderMAUI.Data
                     OrderID = reader.GetInt32("OrderID"),
                     PaymentMethod = reader.GetString("PaymentMethod"),
                     PaymentAmount = reader.GetDecimal("PaymentAmount"),
+                    TotalBill = reader.GetDecimal("TotalBill"),
                     ChangeAmount = reader.GetDecimal("ChangeAmount"),
-                    PaymentDate = reader.GetDateTime("PaymentDate"),
-                    TotalBill = reader.GetDecimal("TotalBill") // Map TotalBill from Receipts table
+                    PaymentDate = reader.GetDateTime("PaymentDate")
                 });
             }
             return payments;
@@ -239,29 +246,43 @@ namespace MenuOrderMAUI.Data
                 using var connection = GetConnection();
                 await connection.OpenAsync();
 
-                // Step 1: Check if a payment for this OrderID already exists
-                string checkQuery = "SELECT COUNT(*) FROM Payments WHERE OrderID = @OrderID;";
-                using var checkCommand = new MySqlCommand(checkQuery, connection);
-                checkCommand.Parameters.AddWithValue("@OrderID", orderID);
-                var existingCount = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                // Step 1: Fetch TotalBill for the given OrderID
+                string getTotalBillQuery = "SELECT TotalBill FROM Receipts WHERE OrderID = @OrderID;";
+                decimal totalBill = 0;
 
-                if (existingCount > 0)
+                using (var command = new MySqlCommand(getTotalBillQuery, connection))
                 {
-                    throw new InvalidOperationException($"A payment for OrderID: {orderID} already exists.");
+                    command.Parameters.AddWithValue("@OrderID", orderID);
+                    using var reader = await command.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        totalBill = reader.GetDecimal("TotalBill");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"No receipt found for OrderID: {orderID}");
+                    }
                 }
 
-                // Step 2: Insert the payment into the Payments table
+                if (paymentAmount < totalBill)
+                {
+                    throw new InvalidOperationException($"Payment amount is insufficient. TotalBill: {totalBill:C}, PaymentAmount is only: {paymentAmount:C}");
+                }
+
+                decimal changeAmount = paymentAmount - totalBill;
+
                 string insertPaymentQuery = @"
-            INSERT INTO Payments (OrderID, PaymentMethod, PaymentAmount)
-            VALUES (@OrderID, @PaymentMethod, @PaymentAmount);";
+            INSERT INTO Payments (OrderID, PaymentMethod, PaymentAmount, ChangeAmount)
+            VALUES (@OrderID, @PaymentMethod, @PaymentAmount, @ChangeAmount);";
 
                 using var insertCommand = new MySqlCommand(insertPaymentQuery, connection);
                 insertCommand.Parameters.AddWithValue("@OrderID", orderID);
                 insertCommand.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
                 insertCommand.Parameters.AddWithValue("@PaymentAmount", paymentAmount);
+                insertCommand.Parameters.AddWithValue("@ChangeAmount", changeAmount);
                 await insertCommand.ExecuteNonQueryAsync();
 
-                Console.WriteLine($"Payment added successfully for OrderID: {orderID}");
+                Console.WriteLine($"Payment added successfully for OrderID: {orderID}, ChangeAmount: {changeAmount}");
             }
             catch (InvalidOperationException ex)
             {

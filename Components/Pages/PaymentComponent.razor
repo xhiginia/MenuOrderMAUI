@@ -113,8 +113,8 @@
                 <th>Order ID</th>
                 <th>Payment Method</th>
                 <th>Payment Amount</th>
-                <th>Change Amount</th>
                 <th>Total Bill</th>
+                <th>Change Amount</th>
                 <th>Payment Date</th>
             </tr>
         </thead>
@@ -193,7 +193,7 @@
             try
             {
                 await DatabaseService.AddPaymentAsync(OrderID, PaymentMethod, PaymentAmount);
-                await LoadPayments(); // Refresh payments after successful addition
+                await LoadPayments();
                 OrderID = 0;
                 PaymentMethod = "";
                 PaymentAmount = 0;
@@ -201,7 +201,7 @@
             }
             catch (InvalidOperationException ex)
             {
-                ErrorMessage = ex.Message; // Show the duplicate payment error
+                ErrorMessage = ex.Message; // Show meaningful error messages
             }
             catch (Exception ex)
             {

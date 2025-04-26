@@ -148,9 +148,14 @@
         <input type="number" @bind="Quantity" min="1" placeholder="Enter Quantity" />
         <button @onclick="PlaceOrder">Place Order</button>
 
+        @if (!string.IsNullOrEmpty(OrderSuccessMessage))
+        {
+            <p style="color: green;">@OrderSuccessMessage</p> <!-- Green text for success -->
+        }
+
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <p class="error-message">@ErrorMessage</p>
+            <p style="color: red;">@ErrorMessage</p> <!-- Red text for errors -->
         }
     </div>
 </div>
@@ -160,7 +165,7 @@
     private int SelectedItemID;
     private int Quantity;
     private string ErrorMessage = "";
-    private string OrderSuccessMessage;
+    private string OrderSuccessMessage = "";
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders();

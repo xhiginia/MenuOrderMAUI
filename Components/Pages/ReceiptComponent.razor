@@ -144,9 +144,14 @@
         <input type="number" @bind="OrderID" min="1" placeholder="Enter Order ID" />
         <button @onclick="GenerateReceipt">Generate Receipt</button>
 
+        @if (!string.IsNullOrEmpty(ReceiptSuccessMessage))
+        {
+            <p style="color: green;">@ReceiptSuccessMessage</p>
+        }
+
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
-            <p class="error-message">@ErrorMessage</p>
+            <p style="color: red;">@ErrorMessage</p>
         }
     </div>
 </div>
@@ -155,7 +160,7 @@
     private List<Receipts> Receipts = new();
     private int OrderID;
     private string ErrorMessage = "";
-    private string ReceiptSuccessMessage;
+    private string ReceiptSuccessMessage = "";
 
 
     protected override async Task OnInitializedAsync()
@@ -183,20 +188,26 @@
             try
             {
                 await DatabaseService.GenerateReceiptAsync(OrderID);
-                await LoadReceipts();
-                ReceiptSuccessMessage = $"Receipt for Order ID {OrderID} has been generated successfully!";
+                await LoadReceipts(); // Refresh receipts after successful generation
+                ReceiptSuccessMessage = $"Receipt generated successfully for OrderID {OrderID}.";
+                ErrorMessage = ""; // Clear any previous error
                 OrderID = 0; // Reset input
+            }
+            catch (InvalidOperationException ex)
+            {
+                ReceiptSuccessMessage = ""; // Clear success message on failure
+                ErrorMessage = ex.Message; // Display validation error
             }
             catch (Exception ex)
             {
-                ReceiptSuccessMessage = string.Empty; // Clear success message on failure
+                ReceiptSuccessMessage = ""; // Clear success message on failure
                 ErrorMessage = $"Error generating receipt: {ex.Message}";
             }
         }
         else
         {
-            ReceiptSuccessMessage = string.Empty; // Clear success message for invalid inputs
-            ErrorMessage = "Please enter a valid Order ID.";
+            ReceiptSuccessMessage = ""; // Clear success message for invalid input
+            ErrorMessage = "Please enter a valid OrderID.";
         }
     }
 }
